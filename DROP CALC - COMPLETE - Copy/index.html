@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fortnite Drop Calculator | Chapter 6 Season 3</title>
+    <link href="https://fonts.googleapis.com/css2?family=Odibee+Sans&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF4655; /* Fortnite red */
+            --secondary: #1CB0F6; /* Fortnite blue */
+            --dark: #0F1923;
+            --light: #F8F8F8;
+            --accent: #FFD700;
+            --success: #2ECC71;
+            --warning: #F39C12;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0F1923;
+            background-image: radial-gradient(circle at center, #1A2A3A 0%, #0F1923 100%);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(15, 25, 35, 0.9);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        h1 {
+            font-family: 'Odibee Sans', cursive;
+            font-size: 3.5rem;
+            color: var(--accent);
+            text-shadow: 0 2px 10px rgba(255, 215, 0, 0.4);
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+            animation: titleGlow 2s infinite alternate;
+        }
+        
+        @keyframes titleGlow {
+            from { text-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+            to { text-shadow: 0 0 20px rgba(255, 215, 0, 0.7); }
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--secondary);
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: rgba(20, 30, 40, 0.7);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+        
+        .panel-title {
+            font-family: 'Odibee Sans', cursive;
+            font-size: 1.8rem;
+            color: var(--secondary);
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 8px;
+            display: inline-block;
+        }
+        
+        .map-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1/1;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        
+        #drawingCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.1) 50%, transparent 75%);
+            background-size: 400% 400%;
+            z-index: -1;
+            transition: all 0.6s ease;
+            opacity: 0;
+        }
+        
+        button:hover::before {
+            opacity: 1;
+            animation: shine 2s infinite;
+        }
+        
+        @keyframes shine {
+            0% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .mode-btn {
+            flex: 1;
+            background-color: var(--dark);
+            color: var(--light);
+            border: 1px solid var(--secondary);
+        }
+        
+        .mode-btn.active {
+            background-color: var(--secondary);
+            color: var(--dark);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(28, 176, 246, 0.4);
+        }
+        
+        .primary-btn {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .primary-btn:hover {
+            background-color: #e63a49;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 70, 85, 0.4);
+        }
+        
+        .secondary-btn {
+            background-color: transparent;
+            color: var(--light);
+            border: 1px solid var(--primary);
+        }
+        
+        .secondary-btn:hover {
+            background-color: rgba(255, 70, 85, 0.2);
+            transform: translateY(-3px);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .instructions {
+            background: rgba(15, 25, 35, 0.7);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--secondary);
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 15px;
+        }
+        
+        .instructions li::before {
+            content: '»';
+            position: absolute;
+            left: 0;
+            color: var(--secondary);
+        }
+        
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .legend-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .results {
+            padding: 20px;
+            background: rgba(15, 25, 35, 0.9);
+            border-radius: 8px;
+            border-left: 4px solid var(--success);
+            margin-top: 25px;
+            animation: fadeInUp 0.6s ease-out;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .results h3 {
+            color: var(--success);
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            border-bottom: 1px solid rgba(46, 204, 113, 0.3);
+            padding-bottom: 8px;
+        }
+        
+        .results p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .results strong {
+            color: var(--accent);
+        }
+        
+        .map-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(45deg, #1A2A3A, #0F1923);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 100;
+            transform: translateY(-100%) translateY(-10px);
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        
+        .tooltip.active {
+            opacity: 1;
+            transform: translateY(-100%) translateY(-5px);
+        }
+        
+        /* Animated background elements */
+        .bg-particle {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 15s infinite linear;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            50% { opacity: 0.3; }
+            100% { transform: translateY(-100vh) translateX(100px); opacity: 0; }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .legend {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated background particles -->
+    <div id="particles"></div>
+    
+    <!-- Tooltip element -->
+    <div class="tooltip" id="tooltip"></div>
+    
+    <div class="container">
+        <header>
+            <h1>FORTNITE DROP CALCULATOR</h1>
+            <p class="subtitle">Chapter 6 Season 3 - Precision Landing Tool</p>
+        </header>
+        
+        <div class="content-grid">
+            <div class="panel">
+                <h2 class="panel-title">Interactive Map</h2>
+                <div class="map-container">
+                    <div id="map-placeholder" class="map-placeholder">Loading Fortnite Map...</div>
+                    <canvas id="drawingCanvas"></canvas>
+                </div>
+                
+                <div class="mode-selector">
+                    <button id="busModeBtn" class="mode-btn active">✈️ Draw Bus Path</button>
+                    <button id="targetModeBtn" class="mode-btn">🎯 Set Target</button>
+                </div>
+                
+                <div class="button-group">
+                    <button id="calculateBtn" class="primary-btn">Calculate Drop Point</button>
+                    <button id="resetBtn" class="secondary-btn">Reset All</button>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2 class="panel-title">Instructions</h2>
+                <div class="instructions">
+                    <ol>
+                        <li>Select <strong>"Draw Bus Path"</strong> mode and click+drag on the map to set the Battle Bus route</li>
+                        <li>Switch to <strong>"Set Target"</strong> mode and click on your desired landing location</li>
+                        <li>The calculator will automatically show where to jump from the bus</li>
+                        <li>Click <strong>"Calculate"</strong> for detailed drop information</li>
+                    </ol>
+                </div>
+                
+                <h2 class="panel-title">Legend</h2>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #1CB0F6;"></div>
+                        <span>Battle Bus Path</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #FF4655;"></div>
+                        <span>Target Location</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #2ECC71;"></div>
+                        <span>Optimal Drop Point</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #9B59B6;"></div>
+                        <span>Projection Point</span>
+                    </div>
+                </div>
+                
+                <div class="results" id="results">
+                    <!-- Results will appear here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create animated background particles
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('bg-particle');
+                particle.style.width = `${Math.random() * 10 + 5}px`;
+                particle.style.height = particle.style.width;
+                particle.style.left = `${Math.random() * 100}vw`;
+                particle.style.top = `${Math.random() * 100 + 100}vh`;
+                particle.style.animationDuration = `${Math.random() * 20 + 10}s`;
+                particle.style.animationDelay = `${Math.random() * 5}s`;
+                particlesContainer.appendChild(particle);
+            }
+            
+            // DOM elements
+            const mapContainer = document.querySelector('.map-container');
+            const mapPlaceholder = document.getElementById('map-placeholder');
+            const canvas = document.getElementById('drawingCanvas');
+            const ctx = canvas.getContext('2d');
+            const calculateBtn = document.getElementById('calculateBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const resultsDiv = document.getElementById('results');
+            const busModeBtn = document.getElementById('busModeBtn');
+            const targetModeBtn = document.getElementById('targetModeBtn');
+            const tooltip = document.getElementById('tooltip');
+            
+            // State variables
+            let busPath = { start: null, end: null };
+            let targetLocation = null;
+            let currentMode = 'bus';
+            let isDrawing = false;
+            let mapImage = new Image();
+            
+            // Set up mode buttons
+            busModeBtn.addEventListener('click', function() {
+                currentMode = 'bus';
+                busModeBtn.classList.add('active');
+                targetModeBtn.classList.remove('active');
+                canvas.style.cursor = 'crosshair';
+            });
+            
+            targetModeBtn.addEventListener('click', function() {
+                currentMode = 'target';
+                targetModeBtn.classList.add('active');
+                busModeBtn.classList.remove('active');
+                canvas.style.cursor = 'pointer';
+            });
+            
+            // Load the local map image
+            function loadLocalMap() {
+                return new Promise((resolve, reject) => {
+                    // Use the local map file path
+                    mapImage.src = 'map.jpg'; // Looks in same directory as HTML file
+                    
+                    mapImage.onload = function() {
+                        // Create img element and add to DOM
+                        const imgElement = document.createElement('img');
+                        imgElement.id = 'map';
+                        imgElement.src = mapImage.src;
+                        imgElement.alt = 'Fortnite Chapter 6 Season 3 Map';
+                        
+                        // Replace placeholder with the actual image
+                        mapPlaceholder.replaceWith(imgElement);
+                        
+                        // Initialize canvas
+                        initializeCanvas();
+                        resolve();
+                    };
+                    
+                    mapImage.onerror = function() {
+                        mapPlaceholder.textContent = 'Failed to load map.jpg. Please ensure the file exists in the same folder as this HTML file.';
+                        // Initialize with default size
+                        canvas.width = mapContainer.clientWidth;
+                        canvas.height = mapContainer.clientHeight;
+                        resolve();
+                    };
+                });
+            }
+            
+            // Initialize canvas to match map size
+            function initializeCanvas() {
+                const map = document.getElementById('map');
+                if (map) {
+                    // Wait for image dimensions to be available
+                    if (map.naturalWidth === 0) {
+                        map.onload = function() {
+                            canvas.width = map.clientWidth;
+                            canvas.height = map.clientHeight;
+                            redrawAll();
+                        };
+                    } else {
+                        canvas.width = map.clientWidth;
+                        canvas.height = map.clientHeight;
+                    }
+                } else {
+                    // Fallback dimensions if map didn't load
+                    canvas.width = mapContainer.clientWidth;
+                    canvas.height = mapContainer.clientHeight;
+                }
+                
+                // Redraw everything
+                redrawAll();
+            }
+            
+            // Drawing functions with enhanced visuals
+            function drawPoint(x, y, color, label, size = 10) {
+                // Glow effect
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 15;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+                
+                // Main circle
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, 2 * Math.PI);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Inner white dot
+                ctx.beginPath();
+                ctx.arc(x, y, size/3, 0, 2 * Math.PI);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.fill();
+                
+                // Reset shadow
+                ctx.shadowColor = 'transparent';
+                
+                if (label) {
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold 14px "Poppins", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    
+                    // Text background
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                    const textWidth = ctx.measureText(label).width;
+                    const padding = 8;
+                    ctx.beginPath();
+                    ctx.roundRect(
+                        x - textWidth/2 - padding, 
+                        y - size - 25, 
+                        textWidth + padding*2, 
+                        20, 
+                        10
+                    );
+                    ctx.fill();
+                    
+                    // Text
+                    ctx.fillStyle = 'white';
+                    ctx.fillText(label, x, y - size - 10);
+                }
+            }
+            
+            function drawLine(x1, y1, x2, y2, color, width = 3) {
+                // Glow effect
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+                
+                // Main line
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = width;
+                ctx.stroke();
+                
+                // Reset shadow
+                ctx.shadowColor = 'transparent';
+                
+                // Dashed effect for some lines
+                if (color === '#9B59B6') { // Projection line
+                    ctx.setLineDash([5, 3]);
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }
+            
+            function redrawAll() {
+                // Clear canvas with fade effect
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw bus path if exists
+                if (busPath.start && busPath.end) {
+                    drawLine(busPath.start.x, busPath.start.y, busPath.end.x, busPath.end.y, '#1CB0F6', 4);
+                    drawPoint(busPath.start.x, busPath.start.y, '#1CB0F6', 'Bus Start', 8);
+                    drawPoint(busPath.end.x, busPath.end.y, '#1CB0F6', 'Bus End', 8);
+                    
+                    // If we have a target, draw the calculation
+                    if (targetLocation) {
+                        const result = calculateDropPoint();
+                        
+                        // Draw projection line
+                        drawLine(result.projectionPoint.x, result.projectionPoint.y, 
+                                targetLocation.x, targetLocation.y, '#9B59B6', 2);
+                        
+                        // Draw drop line
+                        drawLine(result.dropPoint.x, result.dropPoint.y, 
+                                targetLocation.x, targetLocation.y, '#2ECC71', 3);
+                        
+                        // Draw points
+                        drawPoint(targetLocation.x, targetLocation.y, '#FF4655', 'Target', 12);
+                        drawPoint(result.projectionPoint.x, result.projectionPoint.y, '#9B59B6', 'Projection', 8);
+                        drawPoint(result.dropPoint.x, result.dropPoint.y, '#2ECC71', 'Drop Here', 12);
+                    }
+                }
+                
+                // Draw target if exists (without bus path)
+                if (targetLocation && (!busPath.start || !busPath.end)) {
+                    drawPoint(targetLocation.x, targetLocation.y, '#FF4655', 'Target', 12);
+                }
+            }
+            
+            // Calculate the drop point
+            function calculateDropPoint() {
+                // Calculate the perpendicular distance from target to bus path
+                const busVector = { 
+                    x: busPath.end.x - busPath.start.x, 
+                    y: busPath.end.y - busPath.start.y 
+                };
+                const targetVector = { 
+                    x: targetLocation.x - busPath.start.x, 
+                    y: targetLocation.y - busPath.start.y 
+                };
+                
+                const dotProduct = busVector.x * targetVector.x + busVector.y * targetVector.y;
+                const busLengthSquared = busVector.x * busVector.x + busVector.y * busVector.y;
+                const projectionLength = dotProduct / busLengthSquared;
+                
+                const projectionPoint = {
+                    x: busPath.start.x + projectionLength * busVector.x,
+                    y: busPath.start.y + projectionLength * busVector.y
+                };
+                
+                // Calculate distance from target to projection point
+                const dx = targetLocation.x - projectionPoint.x;
+                const dy = targetLocation.y - projectionPoint.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // Calculate optimal drop point with realistic glider mechanics
+                const dropDistance = distance * 1.5; // Adjust based on testing
+                
+                // Calculate drop point (extending beyond projection)
+                const dropPoint = {
+                    x: projectionPoint.x - (dx / distance) * dropDistance,
+                    y: projectionPoint.y - (dy / distance) * dropDistance
+                };
+                
+                return {
+                    dropPoint,
+                    projectionPoint,
+                    distance
+                };
+            }
+            
+            // Get mouse position relative to canvas
+            function getMousePos(canvas, evt) {
+                const rect = canvas.getBoundingClientRect();
+                return {
+                    x: evt.clientX - rect.left,
+                    y: evt.clientY - rect.top
+                };
+            }
+            
+            // Show tooltip
+            function showTooltip(text, x, y) {
+                tooltip.textContent = text;
+                tooltip.style.left = `${x}px`;
+                tooltip.style.top = `${y}px`;
+                tooltip.classList.add('active');
+            }
+            
+            // Hide tooltip
+            function hideTooltip() {
+                tooltip.classList.remove('active');
+            }
+            
+            // Event handlers for canvas with animations
+            canvas.addEventListener('mousedown', function(e) {
+                if (currentMode === 'bus') {
+                    const pos = getMousePos(canvas, e);
+                    isDrawing = true;
+                    busPath.start = pos;
+                    busPath.end = pos; // Initialize end point
+                    redrawAll();
+                    
+                    // Animate button to confirm mode
+                    busModeBtn.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        busModeBtn.style.transform = 'scale(1)';
+                    }, 200);
+                }
+            });
+            
+            canvas.addEventListener('mousemove', function(e) {
+                const pos = getMousePos(canvas, e);
+                
+                // Show tooltip with coordinates
+                if (currentMode === 'target') {
+                    showTooltip(`Set target at (${Math.round(pos.x)}, ${Math.round(pos.y)})`, pos.x, pos.y);
+                } else if (isDrawing) {
+                    showTooltip(`Drawing bus path to (${Math.round(pos.x)}, ${Math.round(pos.y)})`, pos.x, pos.y);
+                }
+                
+                if (isDrawing && currentMode === 'bus') {
+                    busPath.end = pos;
+                    redrawAll();
+                }
+            });
+            
+            canvas.addEventListener('mouseout', hideTooltip);
+            canvas.addEventListener('mouseleave', hideTooltip);
+            
+            canvas.addEventListener('mouseup', function(e) {
+                if (isDrawing && currentMode === 'bus') {
+                    isDrawing = false;
+                    hideTooltip();
+                    redrawAll();
+                    
+                    // Success animation
+                    canvas.style.boxShadow = '0 0 20px rgba(28, 176, 246, 0.5)';
+                    setTimeout(() => {
+                        canvas.style.boxShadow = 'none';
+                    }, 500);
+                }
+            });
+            
+            canvas.addEventListener('click', function(e) {
+                if (currentMode === 'target') {
+                    const pos = getMousePos(canvas, e);
+                    targetLocation = pos;
+                    redrawAll();
+                    hideTooltip();
+                    
+                    // Success animation
+                    const targetPoint = document.createElement('div');
+                    targetPoint.style.position = 'absolute';
+                    targetPoint.style.left = `${pos.x - 15}px`;
+                    targetPoint.style.top = `${pos.y - 15}px`;
+                    targetPoint.style.width = '30px';
+                    targetPoint.style.height = '30px';
+                    targetPoint.style.borderRadius = '50%';
+                    targetPoint.style.backgroundColor = 'rgba(255, 70, 85, 0.3)';
+                    targetPoint.style.border = '2px solid #FF4655';
+                    targetPoint.style.pointerEvents = 'none';
+                    targetPoint.style.animation = 'targetPulse 0.6s ease-out';
+                    canvas.parentNode.appendChild(targetPoint);
+                    
+                    setTimeout(() => {
+                        targetPoint.remove();
+                    }, 600);
+                }
+            });
+            
+            // Calculate button with animation
+            calculateBtn.addEventListener('click', function() {
+                if (!busPath.start || !busPath.end) {
+                    // Error animation
+                    resultsDiv.innerHTML = '<p>Please draw the Battle Bus path first</p>';
+                    resultsDiv.style.borderLeftColor = '#FF4655';
+                    resultsDiv.style.animation = 'shake 0.5s';
+                    setTimeout(() => {
+                        resultsDiv.style.animation = 'none';
+                    }, 500);
+                    return;
+                }
+                
+                if (!targetLocation) {
+                    // Error animation
+                    resultsDiv.innerHTML = '<p>Please set your target location</p>';
+                    resultsDiv.style.borderLeftColor = '#FF4655';
+                    resultsDiv.style.animation = 'shake 0.5s';
+                    setTimeout(() => {
+                        resultsDiv.style.animation = 'none';
+                    }, 500);
+                    return;
+                }
+                
+                const result = calculateDropPoint();
+                
+                // Calculate distance in "map units" (percentage of map width)
+                const mapWidth = canvas.width;
+                const distanceInUnits = (result.distance / mapWidth * 100).toFixed(1);
+                
+                // Success animation
+                calculateBtn.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    calculateBtn.style.transform = 'scale(1)';
+                }, 200);
+                
+                resultsDiv.innerHTML = `
+                    <h3>DROP CALCULATION RESULTS</h3>
+                    <p><strong>Distance from bus path:</strong> <span style="color: #2ECC71">${distanceInUnits}</span> map units</p>
+                    <p><strong>Optimal drop point:</strong> Jump when the bus reaches the <span style="color: #2ECC71">green marker</span></p>
+                    <p><strong>Glide strategy:</strong> Face directly toward your target after jumping</p>
+                    <p><strong>Pro Tip:</strong> For high elevations, jump <span style="color: #F39C12">10-15% earlier</span>. For water/low areas, you can jump slightly later.</p>
+                `;
+                resultsDiv.style.borderLeftColor = '#2ECC71';
+                resultsDiv.style.animation = 'fadeInUp 0.6s ease-out';
+            });
+            
+            // Reset button with animation
+            resetBtn.addEventListener('click', function() {
+                // Animation
+                resetBtn.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    resetBtn.style.transform = 'scale(1)';
+                }, 200);
+                
+                busPath = { start: null, end: null };
+                targetLocation = null;
+                resultsDiv.innerHTML = '';
+                redrawAll();
+                
+                // Visual feedback
+                canvas.style.boxShadow = '0 0 30px rgba(255, 70, 85, 0.5)';
+                setTimeout(() => {
+                    canvas.style.boxShadow = 'none';
+                }, 500);
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                // Wait a brief moment for resize to complete
+                setTimeout(initializeCanvas, 100);
+            });
+            
+            // Initialize the app
+            loadLocalMap().then(() => {
+                // Set up event listeners after map loads (or fails to load)
+                initializeCanvas();
+                
+                // Initial animation
+                setTimeout(() => {
+                    document.querySelector('.container').style.animation = 'none';
+                }, 1000);
+            });
+            
+            // Add CSS for dynamic animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes targetPulse {
+                    0% { transform: scale(0.5); opacity: 0.5; }
+                    70% { transform: scale(1.5); opacity: 0.8; }
+                    100% { transform: scale(1); opacity: 0; }
+                }
+                
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    20%, 60% { transform: translateX(-5px); }
+                    40%, 80% { transform: translateX(5px); }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>
